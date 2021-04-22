@@ -1,0 +1,23 @@
+<%- include("header") %> 
+    <body>
+        <!--[if lt IE 7]>
+            <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
+        <![endif]-->
+        <div class="box" id="heading">
+            <h1><%= listTitle %></h1>
+        </div>
+        <div class="box">
+            <!-- here is gonna be a list of todo lists we have created. loop through a lists object -->
+                <% for(var i = 0; i < listItems.length; i++) { %>
+                <div class="item">
+                    <input type="checkbox">
+                    <p><%= listItems[i] %> </p>
+                </div>
+                <% } %>
+        <form class="item" action="/" method="post" name="addItem">
+            <input type="text" name="newItem" id="newItemInput" placeholder="New Item" autocomplete="off"></input>
+            <button name="list" type="submit" class="submit_btn" value=<%=listTitle%>>+</button>
+        </form>
+    </div>
+    </body>
+<%- include("footer") %> 
