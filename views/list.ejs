@@ -15,13 +15,17 @@
         <div class="box">
             <!-- here is gonna be a list of todo lists we have created. loop through a lists object -->
                 <% for(var i = 0; i < listItems.length; i++) { %>
-                <form action="/itemChecked" method="post" name="item_functions">
                     <div class="item">
-                        <input type="checkbox" name="checkbox" value="<%= listItems[i]._id %>" onChange="this.form.submit()">
-                        <!-- <%if(listItems[i].todoDone === true){%> checked="true" <%}%> this code is breaking the submit body-->
-                        <p><%= listItems[i].todoListItem %> </p>
+                        <form action="/deleteItem" method="POST">
+                            <button class="deleteBtn" name="itemId" value="<%= listItems[i]._id %>" onchange="this.form.submit()">-</button>
+                        </form>
+                        <form action="/itemChecked" method="post" name="item_functions">
+                            <input type="checkbox" name="checkbox" value="<%= listItems[i]._id %>" onChange="this.form.submit()">
+                        </form>
+                        <!--// <%if(listItems[i].todoDone === true){%> checked="true" <%}%> this code is breaking the submit body-->
+                            <p><%= listItems[i].todoListItem %> </p>
+                        </form>
                     </div>
-                </form>
                 <% } %>
         <form class="item" action="/" method="post" name="addItem">
             <input type="text" name="newItem" id="newItemInput" placeholder="New Item" autocomplete="off"></input>

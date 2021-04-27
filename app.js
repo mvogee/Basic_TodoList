@@ -92,6 +92,22 @@ function updateCheckboxState(req) {
     });
 }
 
+function deleteItem(req) {
+    mongoose.connect(url, options);
+    const db = mongoose.connection;
+    db.on("error", console.error.bind(console, "connection error"));
+    Todo.findOneAndDelete({_id: req.body.itemId}, (err, result) => {
+        console.log(result + "\nhas been deleted from database.")
+        if (err) {
+            console.log(err);
+        }
+        result.save(() => {
+            mongoose.disconnect();
+        });
+    })
+    req.body.itemId
+}
+
 app.get("/", (req, res) => {
     
     renderPage(getToday.getToday(), res);
@@ -129,6 +145,11 @@ app.post("/itemChecked", (req, res) => {
    updateCheckboxState(req);
    // update the database at req.body.checkbox
    res.redirect("/"); 
+});
+
+app.post("/deleteItem", (req, res) => {
+    deleteItem(req);
+    res.redirect("/");
 });
 
 app.listen(port, () => {
