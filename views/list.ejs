@@ -1,4 +1,10 @@
-<%- include("header") %> 
+<%- include("header") %>
+    <nav class="lists">
+        
+    </nav>
+    <!-- requires a lists: [string,] -->
+    <!-- requires a listTile: string -->
+    <!-- requires a listItems: [{listItem, isDone},] -->
     <body>
         <!--[if lt IE 7]>
             <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
@@ -9,10 +15,13 @@
         <div class="box">
             <!-- here is gonna be a list of todo lists we have created. loop through a lists object -->
                 <% for(var i = 0; i < listItems.length; i++) { %>
-                <div class="item">
-                    <input type="checkbox">
-                    <p><%= listItems[i] %> </p>
-                </div>
+                <form action="/itemChecked" method="post" name="item_functions">
+                    <div class="item">
+                        <input type="checkbox" name="checkbox" value="<%= listItems[i]._id %>" onChange="this.form.submit()">
+                        <!-- <%if(listItems[i].todoDone === true){%> checked="true" <%}%> this code is breaking the submit body-->
+                        <p><%= listItems[i].todoListItem %> </p>
+                    </div>
+                </form>
                 <% } %>
         <form class="item" action="/" method="post" name="addItem">
             <input type="text" name="newItem" id="newItemInput" placeholder="New Item" autocomplete="off"></input>
