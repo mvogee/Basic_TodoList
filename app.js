@@ -125,7 +125,6 @@ app.get("/about", (req, res) => {
 
 
 app.post("/", async function(req, res) {
-    workListItems.push(req.body.newItem);
     const todoObj = {
         name: req.body.newItem,
         isDone: false
