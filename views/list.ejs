@@ -20,7 +20,8 @@
                             <button class="deleteBtn" name="itemId" value="<%= listItems[i]._id %>" onchange="this.form.submit()">-</button>
                         </form>
                         <form action="/itemChecked" method="post" name="item_functions">
-                            <input type="checkbox" name="checkbox" value="<%= listItems[i]._id %>" onChange="this.form.submit()">
+                            <input type="hidden" name="checkbox" value="<%= listItems[i]._id %>">
+                            <input type="checkbox" name="checkbox" value="<%= listItems[i]._id %>" onChange="this.form.submit()" <%= listItems[i].todoDone === true ? "checked" : "" %> >
                         </form>
                         <!--// <%if(listItems[i].todoDone === true){%> checked="true" <%}%> this code is breaking the submit body-->
                             <p><%= listItems[i].todoListItem %> </p>

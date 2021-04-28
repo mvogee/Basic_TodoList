@@ -2,7 +2,11 @@ const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
 const getToday = require(__dirname + "/getDate.js");
+const port = 3000;
 
+app.listen(port, () => {
+    console.log("server listening on port " + port);
+});
 
 const mongoose = require("mongoose");
 const url = "mongodb://localhost:27017/todoList";
@@ -20,35 +24,31 @@ const todoSchema = new mongoose.Schema({
 const Todo = mongoose.model("Todo", todoSchema);
 //TODO: Add new lists (create a name for the list and button to create it)
 //TODO: routing for dinamicly created pages.
-//TODO: add Delete button next to items
-//TODO: query data from database and populate the lists
 
-const port = 3000;
-
-const listItems = []; // this will go away
-const workListItems = []; // this will go away
 
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static("public"));
 app.set("view engine", "ejs");
 
 function dbAdd(dataObj) {
-    console.log("Adding object to mongodb");
-    mongoose.connect(url, options, () => {console.log("server connection made")});
-    const db = mongoose.connection;
-    db.on("error", console.error.bind(console, "connection error"));
-    console.log("test1");
-
-    const todo = new Todo({
-        todoListItem: dataObj.name,
-        todoDone: dataObj.isDone
-    });
-    todo.save((err) => {
-        console.log("Item saved to database");
-        if (err) {
-            console.log(err)    
-        }
-        mongoose.disconnect();
+    return new Promise(Resolve => {
+        mongoose.connect(url, options, () => {
+            console.log("server connection made")
+        });
+        const db = mongoose.connection;
+        db.on("error", console.error.bind(console, "connection error"));
+        const todo = new Todo({
+            todoListItem: dataObj.name,
+            todoDone: dataObj.isDone
+        });
+        todo.save((err) => {
+            console.log("Item saved to database");
+            if (err) {
+                console.log(err)
+            }
+            mongoose.disconnect();
+            Resolve("resolved");
+        });
     });
 }
 
@@ -73,45 +73,50 @@ function renderPage(pageName, res) {
 }
 
 function updateCheckboxState(req) {
-    mongoose.connect(url, options);
-    const db = mongoose.connection;
-    db.on("error", console.error.bind(console, "connection error"));
-    console.log(req.body);
-    Todo.findOne({_id: req.body.checkbox}, (err, result) => {
-        console.log(result);
-        if (err) {
-            console.log(err);
-        }
-        else if (!result) {
-            console.log("result was null\nReturning before failure\n"); // currently always failing if the box is checked
-            return ;
-        }
-        console.log(result.todoDone); // giving null only when box is checked
-        result.todoDone = (result.todoDone === true ? false : true); 
-        result.save(() => {mongoose.disconnect();});
-    });
+    return new Promise(Resolve => {
+        mongoose.connect(url, options);
+        const db = mongoose.connection;
+        db.on("error", console.error.bind(console, "connection error"));
+        console.log(req.body);
+        Todo.findOne({_id: req.body.checkbox}, (err, result) => {
+            console.log(result);
+            if (err) {
+                console.log(err);
+            }
+            else if (!result) {
+                console.log("result was null\nReturning before failure\n"); // currently always failing if the box is checked
+                return ;
+            }
+            console.log(result.todoDone); // giving null only when box is checked
+            result.todoDone = (result.todoDone === true ? false : true); 
+            result.save(() => {
+                mongoose.disconnect();
+                Resolve("resolved");
+            });
+        });
+    }); 
 }
 
 function deleteItem(req) {
-    mongoose.connect(url, options);
-    const db = mongoose.connection;
-    db.on("error", console.error.bind(console, "connection error"));
-    Todo.findOneAndDelete({_id: req.body.itemId}, (err, result) => {
-        console.log(result + "\nhas been deleted from database.")
-        if (err) {
-            console.log(err);
-        }
-        result.save(() => {
-            mongoose.disconnect();
+    return new Promise(Resolve => {
+        mongoose.connect(url, options);
+        const db = mongoose.connection;
+        db.on("error", console.error.bind(console, "connection error"));
+        Todo.findOneAndDelete({_id: req.body.itemId}, (err, result) => {
+            console.log(result + "\nhas been deleted from database.")
+            if (err) {
+                console.log(err);
+            }
+            result.save(() => {
+                mongoose.disconnect();
+                Resolve("resolved");
+            });
         });
-    })
-    req.body.itemId
+    });
 }
 
 app.get("/", (req, res) => {
-    
     renderPage(getToday.getToday(), res);
-
 });
 
 app.get("/about", (req, res) => {
@@ -119,39 +124,25 @@ app.get("/about", (req, res) => {
 });
 
 
-app.post("/", (req, res) => {
-    console.log("post request received");
-    //console.log(req.body);
-    workListItems.push(req.body.newItem); // hook up to the database here
+app.post("/", async function(req, res) {
+    workListItems.push(req.body.newItem);
     const todoObj = {
         name: req.body.newItem,
         isDone: false
     }
-    if(req.body.list === "Work") { // make dinamic pages. This will change to dinamic routing from ejs
-        
-        dbAdd(todoObj);
-        res.redirect("/work");
-    }
-    else {
-        dbAdd(todoObj);
-        console.log("past dbAdd");
-        res.redirect("/");
-    }
+    await dbAdd(todoObj);
+    res.redirect("/");
 
 });
 
-app.post("/itemChecked", (req, res) => {
+app.post("/itemChecked", async function(req, res){
    console.log(req.body);
-   updateCheckboxState(req);
-   // update the database at req.body.checkbox
+   await updateCheckboxState(req);
    res.redirect("/"); 
 });
 
-app.post("/deleteItem", (req, res) => {
-    deleteItem(req);
+app.post("/deleteItem", async function(req, res) {
+    await deleteItem(req);
     res.redirect("/");
 });
 
-app.listen(port, () => {
-    console.log("server listening on port " + port);
-});
