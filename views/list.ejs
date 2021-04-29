@@ -23,12 +23,12 @@
                             <input type="hidden" name="checkbox" value="<%= listItems[i]._id %>">
                             <input type="checkbox" name="checkbox" value="<%= listItems[i]._id %>" onChange="this.form.submit()" <%= listItems[i].todoDone === true ? "checked" : "" %> >
                         </form>
-                        <!--// <%if(listItems[i].todoDone === true){%> checked="true" <%}%> this code is breaking the submit body-->
                             <p><%= listItems[i].todoListItem %> </p>
                         </form>
                     </div>
                 <% } %>
         <form class="item" action="/" method="post" name="addItem">
+            <input type="hidden" name="<%= listTitle %>"> <!-- this is here to allow me to know what list it is being added to-->
             <input type="text" name="newItem" id="newItemInput" placeholder="New Item" autocomplete="off"></input>
             <button name="list" type="submit" class="submit_btn" value=<%=listTitle%>>+</button>
         </form>

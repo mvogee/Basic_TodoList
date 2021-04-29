@@ -22,6 +22,12 @@ const todoSchema = new mongoose.Schema({
     }
 });
 const Todo = mongoose.model("Todo", todoSchema);
+
+const newList = new mongoose.Schema({
+    list: String,
+    listItems: [todoSchema]
+});
+const List = mongoose.model("List", newList);
 //TODO: Add new lists (create a name for the list and button to create it)
 //TODO: routing for dinamicly created pages.
 
@@ -30,8 +36,9 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static("public"));
 app.set("view engine", "ejs");
 
+//! this needs to get updated to be able to add to different lists
 function dbAdd(dataObj) {
-    return new Promise(Resolve => {
+    return new Promise(resolve => {
         mongoose.connect(url, options, () => {
             console.log("server connection made")
         });
@@ -47,11 +54,11 @@ function dbAdd(dataObj) {
                 console.log(err)
             }
             mongoose.disconnect();
-            Resolve("resolved");
+            resolve("resolved");
         });
     });
 }
-
+// this is gonna need an extra bit of help because the collection might not be Todo
 function renderPage(pageName, res) {
     mongoose.connect(url, options, () => {console.log("mongoose connection made")});
     const db = mongoose.connection;
@@ -73,7 +80,7 @@ function renderPage(pageName, res) {
 }
 
 function updateCheckboxState(req) {
-    return new Promise(Resolve => {
+    return new Promise(resolve => {
         mongoose.connect(url, options);
         const db = mongoose.connection;
         db.on("error", console.error.bind(console, "connection error"));
@@ -91,14 +98,14 @@ function updateCheckboxState(req) {
             result.todoDone = (result.todoDone === true ? false : true); 
             result.save(() => {
                 mongoose.disconnect();
-                Resolve("resolved");
+                resolve("resolved");
             });
         });
     }); 
 }
 
 function deleteItem(req) {
-    return new Promise(Resolve => {
+    return new Promise(resolve => {
         mongoose.connect(url, options);
         const db = mongoose.connection;
         db.on("error", console.error.bind(console, "connection error"));
@@ -109,12 +116,12 @@ function deleteItem(req) {
             }
             result.save(() => {
                 mongoose.disconnect();
-                Resolve("resolved");
+                resolve("resolved");
             });
         });
     });
 }
-
+// ------- Get Requests ----------
 app.get("/", (req, res) => {
     renderPage(getToday.getToday(), res);
 });
@@ -123,8 +130,41 @@ app.get("/about", (req, res) => {
     res.render("about");
 });
 
-
+app.get("/:listName", (req, res) => {
+    console.log(req.params);
+    const customListName = req.params.listName;
+    // this needs to finish before the next part is executed
+    //* move List.findOne to its own function
+    List.findOne({list: customListName}, (err, result) => {
+        console.log(result);
+        if (!result) {
+            // if the list doesn't exist create it
+            const list = new List({
+                list: customListName,
+                listItems: []
+            });
+            list.save((err) => {
+                if (err) {
+                    console.log(err);
+                }
+                console.log(customListName + " list created");
+                res.redirect("/" + customListName); // * is there a better way than redirecting?
+            });
+        }
+        else {
+            const ejsObj = {
+                listTitle: customListName,
+                listItems: result.listItems
+            };
+            res.render("list", ejsObj);
+        }
+    });
+    // renderPage(req.params.listName)
+});
+//------------- Post Reqeusts ----------
 app.post("/", async function(req, res) {
+    //listName is the list that needs to be added to
+    console.log(req.body);
     const todoObj = {
         name: req.body.newItem,
         isDone: false
